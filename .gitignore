@@ -44,3 +44,7 @@ Thumbs.db
 # Loglar ve Geçici Dosyalar
 *.log
 *.tmp
+
+# project details
+.entity
+.rules
