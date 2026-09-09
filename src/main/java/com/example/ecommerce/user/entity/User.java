@@ -2,7 +2,7 @@ package com.example.ecommerce.user.entity;
 
 //import com.example.ecommerce.common.domain.BaseEntity;
 import com.example.ecommerce.cart.entity.Cart;
-import com.example.ecommerce.common.domain.Role;
+import com.example.ecommerce.common.domain.UserRole;
 import com.example.ecommerce.orders.entity.Order;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -43,7 +43,7 @@ public class User   {
     // Role
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private Role role;
+    private UserRole role;
 
     // Address
     @OneToMany(mappedBy = "user",  cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -59,7 +59,7 @@ public class User   {
 
 
     public User() {
-        this.role = Role.CUSTOMER;
+        this.role = UserRole.CUSTOMER;
         this.active = true;
     }
 

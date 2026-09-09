@@ -1,6 +1,6 @@
 package com.example.ecommerce.common.domain;
 
-public enum Role {
+public enum UserRole {
     ADMIN,
     CUSTOMER;
 
