@@ -2,7 +2,6 @@ package com.example.ecommerce.user.entity;
 
 //import com.example.ecommerce.common.domain.BaseEntity;
 import com.example.ecommerce.cart.entity.Cart;
-import com.example.ecommerce.common.domain.UserRole;
 import com.example.ecommerce.orders.entity.Order;
 import jakarta.persistence.*;
 import lombok.Getter;
