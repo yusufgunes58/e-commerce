@@ -1,15 +1,11 @@
-package com.example.ecommerce.security;
+package com.example.ecommerce.user.entity;
 
-import com.example.ecommerce.user.entity.User;
 import lombok.Getter;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
