@@ -4,10 +4,9 @@ package com.example.ecommerce.user.entity;
 import com.example.ecommerce.cart.entity.Cart;
 import com.example.ecommerce.orders.entity.Order;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import okhttp3.Address;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +32,8 @@ public class User   {
     @Column(nullable = false, length = 100)
     private String lastName;
 
-    @Column(unique = true,  nullable = false, length = 10)
+    @Column(unique = true,  nullable = false)
+    @Size(min = 10, max = 10)
     private String phone;
 
     @Column(nullable = false)
