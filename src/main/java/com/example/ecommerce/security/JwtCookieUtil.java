@@ -1,9 +1,10 @@
 package com.example.ecommerce.security;
 
+import com.example.ecommerce.config.JwtProperties;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -20,50 +21,78 @@ import java.util.Optional;
  *   Path=/api → Cookie yalnızca API isteklerinde gider
  */
 @Component
+@RequiredArgsConstructor
 public class JwtCookieUtil {
 
-    static final String ACCESS_TOKEN_COOKIE = "access_token";
+    private static final String ACCESS_TOKEN_COOKIE  = "access_token";
+    private static final String REFRESH_TOKEN_COOKIE = "refresh_token";
 
-    /*
-     * Access token'ı HttpOnly cookie olarak response'a yazar.
-     * maxAge = access token süresi (saniye).
-     */
-    public void addAccessTokenCookie(HttpServletResponse response,
-                                     String accessToken,
-                                     long expiresInSeconds) {
-        ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, accessToken)
+    private final JwtProperties jwtProperties;
+
+    // Login / Register — her iki cookie yazılır
+    public void addAuthCookies(HttpServletResponse response,
+                               String accessToken,
+                               String compositeRefreshToken) {
+        addAccessCookie(response, accessToken);
+        addRefreshCookie(response, compositeRefreshToken);
+    }
+
+    // Logout — her iki cookie temizlenir
+    public void clearAuthCookies(HttpServletResponse response) {
+        clearCookie(response, ACCESS_TOKEN_COOKIE,  "/api");
+        clearCookie(response, REFRESH_TOKEN_COOKIE, "/api/v1/auth/refresh");
+    }
+
+    // Okuma
+    public Optional<String> extractAccessToken(HttpServletRequest request) {
+        return extractCookie(request, ACCESS_TOKEN_COOKIE);
+    }
+
+    public Optional<String> extractRefreshToken(HttpServletRequest request) {
+        return extractCookie(request, REFRESH_TOKEN_COOKIE);
+    }
+
+    // Private helpers
+    private void addAccessCookie(HttpServletResponse response, String token) {
+        ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
                 .httpOnly(true)
-                .secure(false) // http://localhost then must change it to TRUE.
-                .sameSite("Lax")  // its Lax for  payment API.
+                .secure(true)
+                .sameSite("Strict")
                 .path("/api")
-                .maxAge(expiresInSeconds)
+                .maxAge(jwtProperties.getAccessTokenExpiration())
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
-    /**
-     * Cookie'yi sıfırlar (logout).
-     * maxAge=0 → tarayıcı cookie'yi hemen siler.
-     */
-    public void clearAccessTokenCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, "")
+    private void addRefreshCookie(HttpServletResponse response, String token) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path("/api")
+                .path("/api/v1/auth/refresh")
+                .maxAge(jwtProperties.getRefreshTokenExpiration())
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    private void clearCookie(HttpServletResponse response, String name, String path) {
+        ResponseCookie cookie = ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path(path)
                 .maxAge(0)
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
-    /** Request cookie'lerinden access token'ı çıkarır. */
-    public Optional<String> extractAccessToken(HttpServletRequest request) {
-        if(request.getCookies() == null) {return Optional.empty(); }
-
+    private Optional<String> extractCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) return Optional.empty();
         return Arrays.stream(request.getCookies())
-                .filter(c-> ACCESS_TOKEN_COOKIE.equals(c.getName()))
+                .filter(c -> name.equals(c.getName()))
                 .map(Cookie::getValue)
                 .findFirst();
     }
