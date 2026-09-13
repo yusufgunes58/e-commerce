@@ -1,6 +1,6 @@
 package com.example.ecommerce.user.service;
 
-import com.example.ecommerce.security.CustomUserDetails;
+import com.example.ecommerce.user.entity.CustomUserDetails;
 import com.example.ecommerce.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -25,4 +25,14 @@ private final UserRepository userRepository;
                 .map(CustomUserDetails::new)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: "+ email));
     }
+
+    @Transactional(readOnly = true)
+    public UserDetails loadUserById(Long userId) throws UsernameNotFoundException {
+        return userRepository.findById(userId)
+                .map(CustomUserDetails::new)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User not found: " + userId
+                ));
+    }
+
 }
