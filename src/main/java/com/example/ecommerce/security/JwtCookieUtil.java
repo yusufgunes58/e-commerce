@@ -1,6 +1,7 @@
 package com.example.ecommerce.security;
 
 import com.example.ecommerce.config.JwtProperties;
+import com.example.ecommerce.user.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,23 +14,24 @@ import java.util.Optional;
 
 /**
  * Access token cookie işlemleri.
- *
+ * <p>
  * Güvenlik ayarları:
- *   HttpOnly  → JavaScript erişemez (XSS koruması)
- *   Secure    → Yalnızca HTTPS (prod'da zorunlu)
- *   SameSite=Strict → Aynı domain; CSRF imkânsız
- *   Path=/api → Cookie yalnızca API isteklerinde gider
+ * HttpOnly  → JavaScript erişemez (XSS koruması)
+ * Secure    → Yalnızca HTTPS (prod'da zorunlu)
+ * SameSite=Strict → Aynı domain; CSRF imkânsız
+ * Path=/api → Cookie yalnızca API isteklerinde gider
  */
 @Component
 @RequiredArgsConstructor
 public class JwtCookieUtil {
 
-    private static final String ACCESS_TOKEN_COOKIE  = "access_token";
+    private static final String ACCESS_TOKEN_COOKIE = "access_token";
     private static final String REFRESH_TOKEN_COOKIE = "refresh_token";
+    private static final String ACCESS_TOKEN_PATH = "/api";
+    private static final String REFRESH_TOKEN_PATH = "/api/v1/auth/refresh";
 
     private final JwtProperties jwtProperties;
 
-    // Login / Register — her iki cookie yazılır
     public void addAuthCookies(HttpServletResponse response,
                                String accessToken,
                                String compositeRefreshToken) {
@@ -37,13 +39,11 @@ public class JwtCookieUtil {
         addRefreshCookie(response, compositeRefreshToken);
     }
 
-    // Logout — her iki cookie temizlenir
     public void clearAuthCookies(HttpServletResponse response) {
-        clearCookie(response, ACCESS_TOKEN_COOKIE,  "/api");
-        clearCookie(response, REFRESH_TOKEN_COOKIE, "/api/v1/auth/refresh");
+        clearCookie(response, ACCESS_TOKEN_COOKIE, ACCESS_TOKEN_PATH);
+        clearCookie(response, REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_PATH);
     }
 
-    // Okuma
     public Optional<String> extractAccessToken(HttpServletRequest request) {
         return extractCookie(request, ACCESS_TOKEN_COOKIE);
     }
@@ -52,16 +52,14 @@ public class JwtCookieUtil {
         return extractCookie(request, REFRESH_TOKEN_COOKIE);
     }
 
-    // Private helpers
     private void addAccessCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path("/api")
+                .path(ACCESS_TOKEN_PATH)
                 .maxAge(jwtProperties.getAccessTokenExpiration())
                 .build();
-
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
@@ -70,10 +68,9 @@ public class JwtCookieUtil {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path("/api/v1/auth/refresh")
+                .path(REFRESH_TOKEN_PATH)
                 .maxAge(jwtProperties.getRefreshTokenExpiration())
                 .build();
-
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
@@ -85,7 +82,6 @@ public class JwtCookieUtil {
                 .path(path)
                 .maxAge(0)
                 .build();
-
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
@@ -96,5 +92,4 @@ public class JwtCookieUtil {
                 .map(Cookie::getValue)
                 .findFirst();
     }
-
 }
