@@ -1,7 +1,8 @@
-package com.example.ecommerce.security;
+package com.example.ecommerce.security.jwt;
 
 import com.example.ecommerce.config.JwtProperties;
 
+import com.example.ecommerce.user.entity.CustomUserDetails;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -25,15 +26,17 @@ public class JwtService {
     private static final String CLAIM_TYPE = "type";
     private static final String TYPE_ACCESS = "ACCESS";
 
-    private final JwtProperties  jwtProperties ;
+    private final JwtProperties jwtProperties;
     private final SecretKey signingKey;
 
     public JwtService(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
 
-        byte[] keyBytes = Decoders.BASE64.decode(
-                jwtProperties.getSecret()
-        );
+        String secret = jwtProperties.getSecret();
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT secret is not configured.");
+        }
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
 
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -59,34 +62,19 @@ public class JwtService {
     }
 
     // Token doğrulama
-    public  boolean isAccessTokenValid(String token) {
+    public Claims parseAccessToken(String token) {
+        Claims claims = parseAllClaims(token);
 
-        try {
-            Claims claims = parseAllClaims(token);
-
-            return TYPE_ACCESS.equals(claims.get(CLAIM_TYPE, String.class));
+        if (!TYPE_ACCESS.equals(claims.get(CLAIM_TYPE, String.class))) {
+            throw new JwtException("Invalid token type");
         }
-//        catch (CertificateExpiredException e) {
-//            log.debug("Access token has expired");
-//            return false;
-//        }
-    catch (JwtException | IllegalArgumentException e) {
-        log.warn("Invalid JWT: {}", e.getMessage());
-        return false;
-    }
-}
-
-    // Claims okuma
-    public Long extractUserId(String token) {
-        return Long.valueOf(
-                parseAllClaims(token).getSubject()
-        );
+        return claims;
     }
 
-    public String extractRole(String token) {
-        return parseAllClaims(token)
-                .get(CLAIM_ROLE, String.class);
-    }
+//    public String extractRole(String token) {
+//        return parseAllClaims(token)
+//                .get(CLAIM_ROLE, String.class);
+//    }
 
     // Helpers
     private Claims parseAllClaims(String token) {
