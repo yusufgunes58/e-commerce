@@ -21,7 +21,7 @@ public class Category extends BaseEntity {
     String name;
 
     public Category(String name) {
-        this.name = name.trim().toLowerCase(Locale.ROOT);
+        this.name = name;
     }
 
 }

@@ -143,7 +143,7 @@ public class CategoryService {
         long productCount = productService.countByCategoryId(categoryId);
 
         return new CategoryDeleteInfoResponse(
-                category.getId(),
+                categoryId,
                 category.getName(),
                 productCount
         );
