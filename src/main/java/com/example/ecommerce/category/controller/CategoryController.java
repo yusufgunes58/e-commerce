@@ -1,5 +1,6 @@
 package com.example.ecommerce.category.controller;
 
+import com.example.ecommerce.category.dto.response.CategoryDeleteInfoResponse;
 import com.example.ecommerce.category.entity.Category;
 import com.example.ecommerce.category.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +33,16 @@ public class CategoryController {
         Category category = categoryService.create(name);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(category);
+    }
+
+    @GetMapping("/{id}/delete-info")
+    @Operation(summary = "Get category delete information")
+    public ResponseEntity<CategoryDeleteInfoResponse> getDeleteInfo(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(
+                categoryService.getDeleteInfo(id)
+        );
     }
 
     @DeleteMapping("/{id}")

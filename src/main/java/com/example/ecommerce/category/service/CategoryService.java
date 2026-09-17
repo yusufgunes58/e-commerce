@@ -1,5 +1,6 @@
 package com.example.ecommerce.category.service;
 
+import com.example.ecommerce.category.dto.response.CategoryDeleteInfoResponse;
 import com.example.ecommerce.category.entity.Category;
 import com.example.ecommerce.category.repository.CategoryRepository;
 import com.example.ecommerce.common.exception.BusinessException;
@@ -55,28 +56,28 @@ public class CategoryService {
         return savedCategory;
     }
 
-    @Transactional
-    public void deleteCategory(Long categoryId, boolean confirmed) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() ->
-                        new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-
-        long productCount = productService.countByCategoryId(categoryId);
-
-        if (productCount > 0 && !confirmed) {
-            throw new BusinessException(
-                    ErrorCode.CATEGORY_DELETE_CONFIRMATION_REQUIRED
-            );
-        }
-
-        categoryRepository.delete(category);
-
-        log.info(
-                "Category deleted successfully. categoryId={}, productCount={}",
-                categoryId,
-                productCount
-        );
-    }
+//    @Transactional
+//    public void deleteCategory(Long categoryId, boolean confirmed) {
+//        Category category = categoryRepository.findById(categoryId)
+//                .orElseThrow(() ->
+//                        new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+//
+//        long productCount = productService.countByCategoryId(categoryId);
+//
+//        if (productCount > 0 && !confirmed) {
+//            throw new BusinessException(
+//                    ErrorCode.CATEGORY_DELETE_CONFIRMATION_REQUIRED
+//            );
+//        }
+//
+//        categoryRepository.delete(category);
+//
+//        log.info(
+//                "Category deleted successfully. categoryId={}, productCount={}",
+//                categoryId,
+//                productCount
+//        );
+//    }
 
     @Transactional
     public Category updateName(Long categoryId, String name) {
@@ -109,6 +110,44 @@ public class CategoryService {
         return updatedCategory;
     }
 
+
+// New Delete Services
+    @Transactional
+    public void deleteCategory(Long categoryId, boolean confirmed) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        long productCount = productService.countByCategoryId(categoryId);
+
+        if (productCount > 0 && !confirmed) {
+            throw new BusinessException(
+                    ErrorCode.CATEGORY_DELETE_CONFIRMATION_REQUIRED
+            );
+        }
+
+        categoryRepository.delete(category);
+
+        log.info(
+                "Category deleted successfully. categoryId={}, productCount={}",
+                categoryId,
+                productCount
+        );
+    }
+
+    public CategoryDeleteInfoResponse getDeleteInfo(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        long productCount = productService.countByCategoryId(categoryId);
+
+        return new CategoryDeleteInfoResponse(
+                category.getId(),
+                category.getName(),
+                productCount
+        );
+    }
 
 
     private String normalizeName(String name) {
