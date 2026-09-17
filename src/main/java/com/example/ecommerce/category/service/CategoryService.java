@@ -87,7 +87,7 @@ public class CategoryService {
 
         String normalizedName = normalizeName(name);
 
-        if (categoryRepository.existsByNameIgnoreCaseAndIdNot(
+        if (categoryRepository.existsByNameAndIdNot(
                 normalizedName,
                 categoryId
         )) {
