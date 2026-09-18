@@ -1,6 +1,7 @@
 package com.example.ecommerce.product.entity;
 
 import com.example.ecommerce.category.entity.Category;
+import com.example.ecommerce.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,7 @@ import java.util.Set;
 @Entity
 @Table(name = "products")
 @Getter @Setter @NoArgsConstructor
-public class Product {
+public class Product extends BaseEntity {
 
     @Column(nullable = false, length = 200)
     private String name;
@@ -57,12 +58,15 @@ public class Product {
     public Product(
             String name,
             String description,
+            String sku,
             Set<Category> categories ,
             String brand
     ) {
         this.name = name;
         this.description = description;
-        this.categories  = categories ;
+        this.categories = categories != null
+                ? new HashSet<>(categories)
+                : new HashSet<>();
         this.brand = brand;
         this.active = true;
     }

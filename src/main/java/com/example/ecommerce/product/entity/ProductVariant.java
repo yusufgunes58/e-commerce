@@ -24,6 +24,9 @@ public class ProductVariant extends BaseEntity {
     @Column(nullable = false, unique = true, length = 100)
     private String barcode;
 
+    @Column(nullable = false, unique = true, length = 100)
+    private String sku;
+
     @Column(nullable = false, length = 100)
     private String color;
 
@@ -44,6 +47,7 @@ public class ProductVariant extends BaseEntity {
     public ProductVariant(
             Product product,
             String barcode,
+            String sku,
             String color,
             String size,
             BigDecimal price,
@@ -56,6 +60,7 @@ public class ProductVariant extends BaseEntity {
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.active = true;
+        this.sku=sku;
     }
 
 

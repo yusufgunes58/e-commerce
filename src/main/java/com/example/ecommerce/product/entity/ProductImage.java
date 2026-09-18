@@ -1,5 +1,6 @@
 package com.example.ecommerce.product.entity;
 
+import com.example.ecommerce.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
@@ -19,6 +20,10 @@ import lombok.Setter;
 @Table(name = "product_images")
 @Getter @Setter @NoArgsConstructor
 public class ProductImage {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
