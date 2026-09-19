@@ -27,6 +27,7 @@ public enum ErrorCode {
     CATEGORY_NAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "Category name already exists"),
     CATEGORY_DELETE_CONFIRMATION_REQUIRED(HttpStatus.CONFLICT, "Category deletion requires confirmation"),
 
+    // Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "Product not found"),
     PRODUCT_NAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "Product name already exists"),
     PRODUCT_VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND, "Product variant not found"),
