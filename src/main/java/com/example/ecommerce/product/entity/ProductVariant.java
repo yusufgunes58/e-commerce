@@ -2,6 +2,7 @@ package com.example.ecommerce.product.entity;
 
 import com.example.ecommerce.common.domain.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,9 @@ public class ProductVariant extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String size;
 
+    @Column(nullable = false, precision = 8, scale = 2)
+    @DecimalMin(value = "0.00")
+    private BigDecimal price;
 
 
     @Column(nullable = false)
@@ -47,6 +51,7 @@ public class ProductVariant extends BaseEntity {
             String sku,
             String color,
             String size,
+            BigDecimal price,
             Integer stockQuantity
     ) {
         this.product = product;
@@ -56,6 +61,7 @@ public class ProductVariant extends BaseEntity {
         this.stockQuantity = stockQuantity;
         this.active = true;
         this.sku=sku;
+        this.price = price;
     }
 
 

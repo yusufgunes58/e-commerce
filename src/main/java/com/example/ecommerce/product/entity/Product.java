@@ -40,9 +40,7 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private Boolean active = true;
 
-    @Column(nullable = false, precision = 8, scale = 2)
-    @DecimalMin(value = "0.00")
-    private BigDecimal price;
+
 
     @OneToMany(
             mappedBy = "product",
@@ -64,8 +62,7 @@ public class Product extends BaseEntity {
             String name,
             String description,
             Set<Category> categories ,
-            String brand,
-            BigDecimal price
+            String brand
     ) {
         this.name = name;
         this.description = description;
@@ -74,7 +71,6 @@ public class Product extends BaseEntity {
                 : new HashSet<>();
         this.brand = brand;
         this.active = true;
-        this.price=price;
     }
 
 }
