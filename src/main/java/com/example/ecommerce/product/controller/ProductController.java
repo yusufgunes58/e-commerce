@@ -1,5 +1,6 @@
 package com.example.ecommerce.product.controller;
 
+import com.example.ecommerce.product.dto.response.customer.ProductDetailResponse;
 import com.example.ecommerce.product.dto.response.customer.ProductListResponse;
 import com.example.ecommerce.product.repository.ProductRepository;
 import com.example.ecommerce.product.service.ProductService;
@@ -10,10 +11,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(name = "api/v1/products")
@@ -35,5 +33,14 @@ public class ProductController {
         );
     }
 
+    @GetMapping("/{productId}")
+    @Operation(summary = "Get Product Details")
+    public ResponseEntity<ProductDetailResponse> getProductDetail(
+            @PathVariable Long productId
+    ) {
+        return ResponseEntity.ok(
+                productService.getPublicProductById(productId)
+        );
+    }
 
 }
