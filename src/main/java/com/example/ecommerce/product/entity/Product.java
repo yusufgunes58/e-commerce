@@ -3,10 +3,11 @@ package com.example.ecommerce.product.entity;
 import com.example.ecommerce.category.entity.Category;
 import com.example.ecommerce.common.domain.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,10 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @Column(nullable = false, precision = 8, scale = 2)
+    @DecimalMin(value = "0.00")
+    private BigDecimal price;
+
     @OneToMany(
             mappedBy = "product",
             fetch = FetchType.LAZY,
@@ -58,9 +63,9 @@ public class Product extends BaseEntity {
     public Product(
             String name,
             String description,
-            String sku,
             Set<Category> categories ,
-            String brand
+            String brand,
+            BigDecimal price
     ) {
         this.name = name;
         this.description = description;
@@ -69,6 +74,7 @@ public class Product extends BaseEntity {
                 : new HashSet<>();
         this.brand = brand;
         this.active = true;
+        this.price=price;
     }
 
 }
