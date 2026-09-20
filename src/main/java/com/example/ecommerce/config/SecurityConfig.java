@@ -33,55 +33,53 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+
                 .sessionManagement(s ->
-                        s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+                        s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-                        // Public
+        http.authorizeHttpRequests(auth -> auth
+                        // ── AUTH ──────────────────────────────────────────────
                         .requestMatchers(
-                                "/api/v1/auth/**"
+                                "/api/v1/auth/register",
+                                "/api/v1/auth/login"
                         ).permitAll()
 
-                        // Public product catalog
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/brands/**").permitAll()
-
-                        // Admin product management
-                        .requestMatchers(HttpMethod.POST, "/api/v1/products/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/products/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**")
-                        .hasRole("ADMIN")
-
-                        // Admin category / brand management
-                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**")
-                        .hasRole("ADMIN")
-
-                        .requestMatchers(HttpMethod.POST, "/api/v1/brands/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/brands/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/brands/**")
-                        .hasRole("ADMIN")
-
-                        // Admin area
-                        .requestMatchers("/api/v1/admin/**")
-                        .hasRole("ADMIN")
-
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/logout"
+                        ).authenticated()
+
+                        // ── CATEGORY (public read) ────────────────────────────
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/categories/**"
                         ).permitAll()
 
-                        // Everything else requires authentication
+                        // ── PRODUCT (public read) ─────────────────────────────
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/products/**"
+                        ).permitAll()
+
+                        // ── CART ──────────────────────────────────────────────
+                        // Guest cart: session bazlı, auth gerekmez
+                        .requestMatchers("/api/v1/cart/guest/**").permitAll()
+                        // Kayıtlı kullanıcı cart: auth gerekli
+                        .requestMatchers("/api/v1/cart/**").authenticated()
+
+                        // ── ORDER ─────────────────────────────────────────────
+                        // Guest checkout: mail + kargo bilgisi ile
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/orders/guest"
+                        ).permitAll()
+                        // Normal order: auth gerekli
+                        .requestMatchers("/api/v1/orders/**").authenticated()
+
+                        // ── ADMIN ─────────────────────────────────────────────
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                        // ── DEFAULT ───────────────────────────────────────────
                         .anyRequest().authenticated()
                 )
+
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> {
                             res.setStatus(401);
@@ -94,7 +92,9 @@ public class SecurityConfig {
                             res.getWriter().write("{\"error\":\"Forbidden\"}");
                         })
                 )
+
                 .authenticationProvider(authenticationProvider())
+
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);
 
