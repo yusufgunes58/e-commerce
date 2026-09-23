@@ -33,7 +33,17 @@ public enum ErrorCode {
     PRODUCT_VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND, "Product variant not found"),
     PRODUCT_SKU_ALREADY_EXISTS(HttpStatus.CONFLICT, "Product SKU already exists"),
     PRODUCT_BARCODE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Product barcode already exists"),
-    INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "Insufficient stock");
+    INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "Insufficient stock"),
+
+    // Cart + CartItem
+    CART_NOT_FOUND(HttpStatus.NOT_FOUND,"Cart not found");
+
+
+
+
+
+
+
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
