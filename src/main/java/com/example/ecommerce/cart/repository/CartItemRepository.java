@@ -1,7 +1,7 @@
 package com.example.ecommerce.cart.repository;
 
-import com.example.ecommerce.cart.dto.response.CartItemResponse;
 import com.example.ecommerce.cart.entity.CartItem;
+import com.example.ecommerce.cart.repository.view.CartItemSummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,11 +20,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
             Long productVariantId
     );
 
-    Optional<CartItem> findByIdAndCartId(
-            Long cartItemId,
-            Long cartId
-    );
-
+/*
     @Query("""
             SELECT new com.example.ecommerce.cart.dto.response.CartItemResponse(
                 ci.id,
@@ -44,7 +40,27 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
             WHERE c.id = :cartId
             ORDER BY ci.id
             """)
-    List<CartItemResponse> findCartItems(
+    List<CartItemResponse> findCartItems(@Param("cartId") Long cartId   );
+*/
+
+    @Query("""
+        SELECT
+            ci.id AS id,
+            ci.productVariantId AS productVariantId,
+            ci.quantity AS quantity
+        FROM CartItem ci
+        WHERE ci.cart.id = :cartId
+        ORDER BY ci.id
+        """)
+    List<CartItemSummary> findCartItemSummaries(
             @Param("cartId") Long cartId
     );
+
+
+    Optional<CartItem> findByIdAndCartUserId(
+            Long cartItemId,
+            Long userId
+    );
+
+
 }
