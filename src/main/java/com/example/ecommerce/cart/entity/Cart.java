@@ -1,7 +1,6 @@
 package com.example.ecommerce.cart.entity;
 
-import com.example.ecommerce.common.domain.BaseEntity;
-import com.example.ecommerce.user.entity.User;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
