@@ -2,22 +2,36 @@ package com.example.ecommerce.cart.entity;
 
 import com.example.ecommerce.common.domain.BaseEntity;
 import com.example.ecommerce.user.entity.User;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "carts")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Cart extends BaseEntity {
+public class Cart  {
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id", nullable = false, unique = true)
+    private Long userId;
+
+    @OneToMany(
+            mappedBy = "cart",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<CartItem> items = new ArrayList<>();
+
+    public Cart(Long userId) {
+        this.userId = userId;
+    }
 }
