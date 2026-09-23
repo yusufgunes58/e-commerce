@@ -36,7 +36,11 @@ public enum ErrorCode {
     INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "Insufficient stock"),
 
     // Cart + CartItem
-    CART_NOT_FOUND(HttpStatus.NOT_FOUND,"Cart not found");
+    CART_NOT_FOUND(HttpStatus.NOT_FOUND,"Cart not found"),
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND,"Cart item not found"),;
+
+
+    //COMMİT FOR LOOKING AGAIN THİS CODES USING...
 
 
 
