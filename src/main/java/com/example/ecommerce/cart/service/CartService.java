@@ -39,12 +39,13 @@ public class CartService {
     @Transactional
     public Cart createCart(Long userId) {
         Cart cart = new Cart(userId);
-        log.info(
-                "Cart created. cartId={}, userId={}",
-                cart.getId(),
+        Cart savedCart = cartRepository.save(cart);
+
+        log.info("Cart created. cartId={}, userId={}",
+                savedCart.getId(),
                 userId
         );
-        return cartRepository.save(cart);
+        return savedCart;
     }
 
 

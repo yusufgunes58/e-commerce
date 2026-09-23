@@ -39,7 +39,7 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping
+    @PatchMapping("/items/{cartItemId}")
     @Operation(summary = "Update cart item quantity")
     public ResponseEntity<Void> updateItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -55,7 +55,7 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping
+    @DeleteMapping("/items/{cartItemId}")
     @Operation(summary = "Remove item from current user's cart")
     public ResponseEntity<Void> deleteItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
