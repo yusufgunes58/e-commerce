@@ -50,7 +50,7 @@ public class CartService {
     }
 
 
-    public CartResponse getMyCart(Long userId) {
+    public CartResponse getCart(Long userId) {
 
         log.debug("Fetching cart. userId={}", userId);
 

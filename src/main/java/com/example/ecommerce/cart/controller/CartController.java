@@ -3,67 +3,86 @@ package com.example.ecommerce.cart.controller;
 import com.example.ecommerce.cart.dto.request.AddCartItemRequest;
 import com.example.ecommerce.cart.dto.request.UpdateCartItemRequest;
 import com.example.ecommerce.cart.dto.response.CartResponse;
-import com.example.ecommerce.cart.service.CartService;
+import com.example.ecommerce.cart.service.CartFacadeService;
 import com.example.ecommerce.user.entity.CustomUserDetails;
-import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/v1/cart")
 @RequiredArgsConstructor
-@RequestMapping("api/v1/cart")
 public class CartController {
 
-    private final CartService cartService;
+    private final CartFacadeService cartFacadeService;
 
     @GetMapping
-    @Operation(summary = "Get Cart by user-id from taking JWT")
-    public ResponseEntity<CartResponse> getMyCart(
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    )
-    {
-        return ResponseEntity.ok( cartService.getMyCart(userDetails.getId())  );
+    public ResponseEntity<CartResponse> getCart(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @CookieValue(value = "guest_session_id", required = false)
+            String guestSessionId
+    ) {
+        return ResponseEntity.ok(
+                cartFacadeService.getCart(
+                        getUserId(userDetails),
+                        guestSessionId
+                )
+        );
     }
 
     @PostMapping
-    @Operation(summary = "Add product variant to current user's cart")
     public ResponseEntity<Void> addItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody AddCartItemRequest request
+            @CookieValue(value = "guest_session_id", required = false)
+            String guestSessionId,
+            @RequestBody AddCartItemRequest request
     ) {
-        cartService.addItem(userDetails.getId(), request);
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping
-    @Operation(summary = "Update cart item quantity")
-    public ResponseEntity<Void> updateItem(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody UpdateCartItemRequest request
-    ) {
-        cartService.updateItem(
-                userDetails.getId(),
+        cartFacadeService.addItem(
+                getUserId(userDetails),
+                guestSessionId,
                 request
         );
 
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("{cartItemId}")
-    @Operation(summary = "Remove item from current user's cart")
-    public ResponseEntity<Void> deleteItem(
+    @PatchMapping
+    public ResponseEntity<Void> updateItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long cartItemId
+            @CookieValue(value = "guest_session_id", required = false)
+            String guestSessionId,
+            @RequestBody UpdateCartItemRequest request
     ) {
-        cartService.deleteItem(
-                userDetails.getId(),
-                cartItemId
+        cartFacadeService.updateItem(
+                getUserId(userDetails),
+                guestSessionId,
+                request
         );
 
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("{productVariantId}")
+    public ResponseEntity<Void> deleteItem(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @CookieValue(value = "guest_session_id", required = false)
+            String guestSessionId,
+            @PathVariable Long productVariantId
+    ) {
+        cartFacadeService.deleteItem(
+                getUserId(userDetails),
+                guestSessionId,
+                productVariantId
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // helper
+    private Long getUserId(CustomUserDetails userDetails) {
+        return userDetails != null
+                ? userDetails.getId()
+                : null;
     }
 }

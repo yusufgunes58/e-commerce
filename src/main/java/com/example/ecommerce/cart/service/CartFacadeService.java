@@ -2,6 +2,7 @@ package com.example.ecommerce.cart.service;
 
 import com.example.ecommerce.cart.dto.request.AddCartItemRequest;
 import com.example.ecommerce.cart.dto.request.UpdateCartItemRequest;
+import com.example.ecommerce.cart.dto.response.CartResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,14 @@ public class CartFacadeService {
 
     private final CartService cartService;
     private final GuestCartService guestCartService;
+
+
+    public CartResponse getCart(Long userId, String sessionId) {
+        if(userId!=null) {
+            return cartService.getCart(userId);
+        }
+        return guestCartService.getCart(sessionId);
+    }
 
     public void addItem(
             Long userId,
