@@ -35,6 +35,7 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductVariantService productVariantService;
+    private final CartValidator cartValidator;
 
     @Transactional
     public Cart createCart(Long userId) {
@@ -84,14 +85,17 @@ public class CartService {
                             );
 
                     return new CartItemResponse(
-                            cartItem.getId(),
                             cartItem.getProductVariantId(),
                             productVariant.productName(),
                             productVariant.primaryImageUrl(),
                             productVariant.color(),
                             productVariant.size(),
                             productVariant.price(),
-                            cartItem.getQuantity()
+                            cartItem.getQuantity(),
+                            productVariant.price()
+                                    .multiply(
+                                            BigDecimal.valueOf(cartItem.getQuantity())
+                                    )
                     );
                 })
                 .toList();
@@ -100,13 +104,16 @@ public class CartService {
 
         log.debug("Fetched cart. userId={}, itemCount={}",
                 userId,
-                items.size()     );
+                items.size());
 
         return new CartResponse(items, totalPrice);
     }
 
     @Transactional
-    public void addItem(Long userId, @NonNull AddCartItemRequest request) {
+    public void addItem(
+            Long userId,
+            @NonNull AddCartItemRequest request
+    ) {
 
         log.debug("Adding item to cart. userId={}, productVariantId={}, quantity={}",
                 userId,
@@ -116,24 +123,32 @@ public class CartService {
 
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() ->
-                        new BusinessException(ErrorCode.CART_NOT_FOUND)  );
+                        new BusinessException(ErrorCode.CART_NOT_FOUND)
+                );
 
         FindVariantForCart variant =
                 productVariantService.getVariantInfo(
-                        request.productVariantId()     );
+                        request.productVariantId()
+                );
 
-        validateVariant(variant);
+        cartValidator.validateVariant(variant);
 
         CartItem cartItem = cartItemRepository
-                .findByCartIdAndProductVariantId(
-                        cart.getId(),
+                .findByCartUserIdAndProductVariantId(
+                        userId,
                         variant.id()
                 )
                 .orElse(null);
 
-        int newQuantity = calculateNewQuantity( cartItem, request.quantity()  );
+        int newQuantity = calculateNewQuantity(
+                cartItem,
+                request.quantity()
+        );
 
-        validateStock(variant, newQuantity);
+        cartValidator.validateStock(
+                variant,
+                newQuantity
+        );
 
         if (cartItem != null) {
             cartItem.setQuantity(newQuantity);
@@ -141,96 +156,95 @@ public class CartService {
             cartItem = new CartItem(
                     cart,
                     variant.id(),
-                    newQuantity      );
+                    newQuantity
+            );
+
             cartItemRepository.save(cartItem);
         }
 
         log.info("Cart item added. userId={}, productVariantId={}, quantity={}",
                 userId,
                 variant.id(),
-                newQuantity    );
-
+                newQuantity
+        );
     }
 
     @Transactional
     public void updateItem(
             Long userId,
-            Long cartItemId,
             @NonNull UpdateCartItemRequest request
     ) {
-
-        log.debug("Updating cart item. userId={}, cartItemId={}, quantity={}",
+        log.debug(
+                "Updating cart item. userId={}, productVariantId(),={}, quantity={}",
                 userId,
-                cartItemId,
+                request.productVariantId(),
                 request.quantity()
         );
 
         CartItem cartItem = cartItemRepository
-                .findByIdAndCartUserId(cartItemId, userId)
+                .findByCartUserIdAndProductVariantId(
+                        userId,
+                        request.productVariantId()
+                )
                 .orElseThrow(() ->
                         new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND)
                 );
 
         FindVariantForCart variant =
-                productVariantService.getVariantInfo(
-                        cartItem.getProductVariantId()
-                );
+                productVariantService.getVariantInfo(request.productVariantId());
 
-        validateVariant(variant);
-        validateStock(variant, request.quantity());
+        cartValidator.validateVariant(variant);
+        cartValidator.validateStock(variant, request.quantity());
 
         cartItem.setQuantity(request.quantity());
 
         log.info(
-                "Cart item updated. userId={}, cartItemId={}, quantity={}",
+                "Cart item updated. userId={}, productVariantId={}, quantity={}",
                 userId,
-                cartItemId,
+                request.productVariantId(),
                 request.quantity()
         );
     }
 
 
     @Transactional
-    public void deleteItem(Long userId, Long cartItemId) {
-
-        log.debug("Deleting cart item. userId={}, cartItemId={}",
+    public void deleteItem(
+            Long userId,
+            Long productVariantId
+    ) {
+        log.debug(
+                "Deleting cart item. userId={}, productVariantId={}",
                 userId,
-                cartItemId
+                productVariantId
         );
 
         CartItem cartItem = cartItemRepository
-                .findByIdAndCartUserId(cartItemId, userId)
+                .findByCartUserIdAndProductVariantId(
+                        userId,
+                        productVariantId
+                )
                 .orElseThrow(() ->
                         new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND)
                 );
 
         cartItemRepository.delete(cartItem);
 
-        log.info("Cart item deleted. userId={}, cartItemId={}, productVariantId={}",
+        log.info(
+                "Cart item deleted. userId={}, productVariantId={}",
                 userId,
-                cartItemId,
-                cartItem.getProductVariantId()
+                productVariantId
         );
     }
 
+
     // HELPERS
 
-    private BigDecimal getTotalPrice(@NonNull List<CartItemResponse> items) {
+    private BigDecimal getTotalPrice(
+            List<CartItemResponse> items
+    ) {
         return items.stream()
-                .map(item ->
-                        item.price()
-                                .multiply(BigDecimal.valueOf(item.quantity()))
-                )
+                .map(CartItemResponse::totalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private void validateVariant(FindVariantForCart variant) {
-
-        if (!variant.active()) {
-            throw new BusinessException(
-                    ErrorCode.PRODUCT_VARIANT_NOT_FOUND
-            );
-        }
     }
 
     private int calculateNewQuantity(
@@ -240,18 +254,7 @@ public class CartService {
         if (cartItem == null) {
             return requestedQuantity;
         }
-
         return cartItem.getQuantity() + requestedQuantity;
     }
 
-    private void validateStock(
-            FindVariantForCart variant,
-            int quantity
-    ) {
-        if (variant.stockQuantity() < quantity) {
-            throw new BusinessException(
-                    ErrorCode.INSUFFICIENT_STOCK
-            );
-        }
-    }
 }
