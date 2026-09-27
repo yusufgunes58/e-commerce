@@ -4,7 +4,9 @@ import com.example.ecommerce.cart.dto.request.AddCartItemRequest;
 import com.example.ecommerce.cart.dto.request.UpdateCartItemRequest;
 import com.example.ecommerce.cart.dto.response.CartResponse;
 import com.example.ecommerce.cart.service.CartFacadeService;
+import com.example.ecommerce.cart.service.GuestSessionService;
 import com.example.ecommerce.user.entity.CustomUserDetails;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
     private final CartFacadeService cartFacadeService;
+    private final GuestSessionService guestSessionService;
 
     @GetMapping
     public ResponseEntity<CartResponse> getCart(
@@ -37,10 +40,21 @@ public class CartController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @CookieValue(value = "guest_session_id", required = false)
             String guestSessionId,
-            @RequestBody AddCartItemRequest request
+            @RequestBody AddCartItemRequest request,
+            HttpServletResponse response
     ) {
+        Long userId = resolveUserId(userDetails);
+
+        if (userId == null) {
+            guestSessionId = guestSessionService.getOrCreateGuestSession(guestSessionId, response);
+        }
+
         return ResponseEntity.ok(
-                cartFacadeService.addItem(resolveUserId(userDetails), guestSessionId, request)
+                cartFacadeService.addItem(
+                        userId,
+                        guestSessionId,
+                        request
+                )
         );
     }
 
