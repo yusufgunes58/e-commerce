@@ -21,55 +21,39 @@ public class CartFacadeService {
         return guestCartService.getCart(sessionId);
     }
 
-    public void addItem(
+    public CartResponse  addItem(
             Long userId,
             String sessionId,
             AddCartItemRequest request
     ) {
         if (userId != null) {
-            cartService.addItem(userId, request);
-            return;
+           return cartService.addItem(userId, request);
         }
-
-        guestCartService.addItem(sessionId, request);
+       return guestCartService.addItem(sessionId, request);
     }
 
 
-    public void updateItem(
+    public CartResponse  updateItem(
             Long userId,
             String sessionId,
             UpdateCartItemRequest request
     ) {
         if (userId != null) {
-            cartService.updateItem(
-                    userId,
-                    request
-            );
-            return;
+           return cartService.updateItem(userId, request);
         }
 
-        guestCartService.updateItem(
-                sessionId,
-                request
-        );
+       return guestCartService.updateItem(sessionId, request);
     }
 
-    public void deleteItem(
+    public CartResponse  deleteItem(
             Long userId,
             String sessionId,
             Long productVariantId
     ) {
         if (userId != null) {
-            cartService.deleteItem(
-                    userId,
-                    productVariantId
-            );
-            return;
+          return  cartService.deleteItem(userId, productVariantId);
         }
-
-        guestCartService.deleteItem(
-                sessionId,
-                productVariantId
+       return guestCartService.deleteItem(sessionId, productVariantId
         );
     }
 }

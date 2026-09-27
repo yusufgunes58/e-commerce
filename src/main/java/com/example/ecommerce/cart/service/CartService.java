@@ -49,7 +49,6 @@ public class CartService {
         return savedCart;
     }
 
-
     public CartResponse getCart(Long userId) {
 
         log.debug("Fetching cart. userId={}", userId);
@@ -110,7 +109,7 @@ public class CartService {
     }
 
     @Transactional
-    public void addItem(
+    public CartResponse  addItem(
             Long userId,
             @NonNull AddCartItemRequest request
     ) {
@@ -159,7 +158,7 @@ public class CartService {
                     newQuantity
             );
 
-            cartItemRepository.save(cartItem);
+             cartItemRepository.save(cartItem);
         }
 
         log.info("Cart item added. userId={}, productVariantId={}, quantity={}",
@@ -167,10 +166,12 @@ public class CartService {
                 variant.id(),
                 newQuantity
         );
+
+        return getCart(userId);
     }
 
     @Transactional
-    public void updateItem(
+    public CartResponse  updateItem(
             Long userId,
             @NonNull UpdateCartItemRequest request
     ) {
@@ -204,11 +205,13 @@ public class CartService {
                 request.productVariantId(),
                 request.quantity()
         );
+
+        return getCart(userId);
     }
 
 
     @Transactional
-    public void deleteItem(
+    public CartResponse  deleteItem(
             Long userId,
             Long productVariantId
     ) {
@@ -234,6 +237,8 @@ public class CartService {
                 userId,
                 productVariantId
         );
+
+        return getCart(userId);
     }
 
 
