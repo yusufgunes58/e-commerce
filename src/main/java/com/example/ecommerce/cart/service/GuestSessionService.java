@@ -1,6 +1,5 @@
 package com.example.ecommerce.cart.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
@@ -16,7 +15,7 @@ public class GuestSessionService {
     private static final String COOKIE_NAME = "guest_session_id";
     private static final Duration COOKIE_MAX_AGE =Duration.ofDays(7);
 
-    public String getOrCreateGuestSessionId(
+    public String getOrCreateGuestSession(
                 String sessionId,
                 HttpServletResponse response
     ) {
@@ -31,7 +30,7 @@ public class GuestSessionService {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path("/api/v1/cart/guest")
+                .path("/api")
                 .maxAge(COOKIE_MAX_AGE)
                 .build();
 
