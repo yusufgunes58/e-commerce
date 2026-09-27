@@ -20,67 +20,58 @@ public class CartController {
     @GetMapping
     public ResponseEntity<CartResponse> getCart(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @CookieValue(value = "guest_session_id", required = false)
+            @CookieValue(value = "guest_session_id", required = false
+            )
             String guestSessionId
     ) {
         return ResponseEntity.ok(
                 cartFacadeService.getCart(
-                        getUserId(userDetails),
+                        resolveUserId(userDetails),
                         guestSessionId
                 )
         );
     }
 
-    @PostMapping
-    public ResponseEntity<Void> addItem(
+    @PostMapping("/items")
+    public ResponseEntity<CartResponse> addItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @CookieValue(value = "guest_session_id", required = false)
             String guestSessionId,
             @RequestBody AddCartItemRequest request
     ) {
-        cartFacadeService.addItem(
-                getUserId(userDetails),
-                guestSessionId,
-                request
+        return ResponseEntity.ok(
+                cartFacadeService.addItem(resolveUserId(userDetails), guestSessionId, request)
         );
-
-        return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping
-    public ResponseEntity<Void> updateItem(
+    @PatchMapping("/items")
+    public ResponseEntity<CartResponse> updateItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @CookieValue(value = "guest_session_id", required = false)
             String guestSessionId,
             @RequestBody UpdateCartItemRequest request
     ) {
-        cartFacadeService.updateItem(
-                getUserId(userDetails),
-                guestSessionId,
-                request
+        return ResponseEntity.ok(
+                cartFacadeService.updateItem(resolveUserId(userDetails), guestSessionId, request)
         );
-
-        return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("{productVariantId}")
-    public ResponseEntity<Void> deleteItem(
+    @DeleteMapping("/items/{productVariantId}")
+    public ResponseEntity<CartResponse> deleteItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @CookieValue(value = "guest_session_id", required = false)
             String guestSessionId,
             @PathVariable Long productVariantId
     ) {
-        cartFacadeService.deleteItem(
-                getUserId(userDetails),
-                guestSessionId,
-                productVariantId
+        return ResponseEntity.ok(
+                cartFacadeService.deleteItem(resolveUserId(userDetails), guestSessionId, productVariantId)
         );
-
-        return ResponseEntity.noContent().build();
     }
 
     // helper
-    private Long getUserId(CustomUserDetails userDetails) {
+    private Long resolveUserId(
+            CustomUserDetails userDetails
+    ) {
         return userDetails != null
                 ? userDetails.getId()
                 : null;
