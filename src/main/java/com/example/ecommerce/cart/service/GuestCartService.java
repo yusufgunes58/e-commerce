@@ -4,20 +4,20 @@ import com.example.ecommerce.cart.dto.request.AddCartItemRequest;
 import com.example.ecommerce.cart.dto.request.UpdateCartItemRequest;
 import com.example.ecommerce.cart.dto.response.CartItemResponse;
 import com.example.ecommerce.cart.dto.response.CartResponse;
-import com.example.ecommerce.cart.entity.Cart;
+
 import com.example.ecommerce.cart.repository.GuestCartRepository;
 import com.example.ecommerce.common.exception.BusinessException;
 import com.example.ecommerce.common.exception.ErrorCode;
 import com.example.ecommerce.product.dto.response.FindVariantForCart;
 import com.example.ecommerce.product.dto.response.integrationCart.CartProductVariant;
 import com.example.ecommerce.product.service.ProductVariantService;
-import jakarta.validation.constraints.NotNull;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +30,7 @@ public class GuestCartService {
     private final ProductVariantService productVariantService;
     private final CartValidator cartValidator;
 
-    public void addItem(String sessionId,
+    public CartResponse addItem(String sessionId,
                         AddCartItemRequest request
     ) {
         log.debug(
@@ -41,37 +41,24 @@ public class GuestCartService {
         );
 
         FindVariantForCart variant =
-                productVariantService.getVariantInfo(
-                        request.productVariantId()
-                );
+                productVariantService.getVariantInfo(request.productVariantId());
 
         cartValidator.validateVariant(variant);
 
-        Map<Long, Integer> items =
-                guestCartRepository.find(sessionId);
+        Map<Long, Integer> items = guestCartRepository.find(sessionId);
 
-        if (items == null) {
-            items = new HashMap<>();
-        }
+        int currentQuantity =
+                items.getOrDefault(request.productVariantId(), 0);
 
-        int newQuantity = items.getOrDefault(
-                variant.id(),
-                0
-        ) + request.quantity();
+        int newQuantity =
+                currentQuantity + request.quantity();
 
-        cartValidator.validateStock(
-                variant,
-                newQuantity
-        );
+        cartValidator.validateStock(variant, newQuantity);
 
-        items.put(
-                variant.id(),
-                newQuantity
-        );
-
-        guestCartRepository.save(
+        guestCartRepository.addItem(
                 sessionId,
-                items
+                variant.id(),
+                request.quantity()
         );
 
         log.info("Guest cart item added. sessionId={}, productVariantId={}, quantity={}",
@@ -79,6 +66,8 @@ public class GuestCartService {
                 variant.id(),
                 newQuantity
         );
+
+        return getCart(sessionId);
     }
 
 
@@ -140,29 +129,29 @@ public class GuestCartService {
         return new CartResponse(cartItems, totalPrice);
     }
 
-    public CartResponse updateItem(String sessionId, @NotNull UpdateCartItemRequest request) {
+    public CartResponse updateItem(String sessionId, UpdateCartItemRequest request) {
         Long productVariantId = request.productVariantId();
 
-        log.debug("Updating guest cart item. sessionId={}, productVariantId={}, quantity={}", sessionId, productVariantId, request.quantity());
+        log.debug("Updating guest cart item. sessionId={}, productVariantId={}, quantity={}",
+                sessionId, productVariantId, request.quantity());
 
         Map<Long, Integer> items = guestCartRepository.find(sessionId);
 
-        if (items == null || !items.containsKey(productVariantId)) {
+        if (!items.containsKey(productVariantId)) {
             throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
         }
 
         FindVariantForCart variant = productVariantService.getVariantInfo(productVariantId);
 
         cartValidator.validateVariant(variant);
-        cartValidator.validateStock(
-                variant, request.quantity()
-        );
+        cartValidator.validateStock(variant, request.quantity());
 
-        items.put(
-                productVariantId, request.quantity()
-        );
 
-        guestCartRepository.save(sessionId, items);
+        guestCartRepository.updateItem(
+                sessionId,
+                productVariantId,
+                request.quantity()
+        );
 
         log.info(
                 "Guest cart item updated. sessionId={}, productVariantId={}, quantity={}",
@@ -182,17 +171,11 @@ public class GuestCartService {
 
         Map<Long, Integer> items = guestCartRepository.find(sessionId);
 
-        if (items == null || items.isEmpty()) {
+        if (!items.containsKey(productVariantId)) {
             throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
         }
 
-        items.remove(productVariantId);
-
-        if (items.isEmpty()) {
-            guestCartRepository.delete(sessionId);
-        } else {
-            guestCartRepository.save(sessionId, items);
-        }
+        guestCartRepository.removeItem(sessionId, productVariantId);
 
         log.info("Guest cart item deleted. sessionId={}, productVariantId={}",
                 sessionId,
