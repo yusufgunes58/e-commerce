@@ -60,10 +60,10 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // ── CART ──────────────────────────────────────────────
-                        // Guest cart: session bazlı, auth gerekmez
-                        .requestMatchers("/api/v1/cart/guest/**").permitAll()
-                        // Kayıtlı kullanıcı cart: auth gerekli
-                        .requestMatchers("/api/v1/cart/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/cart").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/cart/items").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/cart/items").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/cart/items/**").permitAll()
 
                         // ── ORDER ─────────────────────────────────────────────
                         // Guest checkout: mail + kargo bilgisi ile
