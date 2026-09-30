@@ -2,6 +2,7 @@ package com.example.ecommerce.cart.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
@@ -10,10 +11,11 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@ConfigurationProperties(prefix = "app.guest-cart")
 public class GuestSessionService {
 
-    private static final String COOKIE_NAME = "guest_session_id";
-    private static final Duration COOKIE_MAX_AGE =Duration.ofDays(7);
+    private String cookieName;
+    private long cookieMaxAgeDays;
 
     public String getOrCreateGuestSession(
                 String sessionId,
@@ -26,12 +28,12 @@ public class GuestSessionService {
         String newSessionId = UUID.randomUUID().toString();
 
         ResponseCookie cookie = ResponseCookie
-                .from(COOKIE_NAME, newSessionId)
+                .from(cookieName, newSessionId)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
                 .path("/api")
-                .maxAge(COOKIE_MAX_AGE)
+                .maxAge(cookieMaxAgeDays)
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
