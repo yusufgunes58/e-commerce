@@ -14,6 +14,7 @@ import com.example.ecommerce.product.repository.ProductRepository;
 import com.example.ecommerce.product.repository.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,10 @@ public class ProductService {
     }
 
     // Public-Customer : Get All Active Products
+    @Cacheable(
+            cacheNames = "productList",
+            key = "#categoryId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort"
+    )
     public Slice<ProductListResponse> getPublicProducts(
             Long categoryId,
             Pageable pageable
@@ -64,6 +69,7 @@ public class ProductService {
         return products;
     }
 
+    @Cacheable(cacheNames = "productVariantCart", key = "#variantIds")
     public ProductDetailResponse getPublicProductById(Long productId) {
 
         log.debug("Fetching public product detail. productId={}", productId);
