@@ -1,5 +1,6 @@
 package com.example.ecommerce.user.service;
 
+
 import com.example.ecommerce.common.exception.BusinessException;
 import com.example.ecommerce.common.exception.ErrorCode;
 import com.example.ecommerce.security.jwt.JwtService;
@@ -8,9 +9,11 @@ import com.example.ecommerce.user.dto.LoginRequest;
 import com.example.ecommerce.user.dto.RegisterRequest;
 import com.example.ecommerce.user.entity.CustomUserDetails;
 import com.example.ecommerce.user.entity.User;
+import com.example.ecommerce.user.event.UserRegisteredEvent;
 import com.example.ecommerce.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,7 +32,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final SessionService sessionService;
     private final CustomUserDetailsService userDetailsService;
-
+    private final ApplicationEventPublisher eventPublisher;
     // ----------------------------------------------------------------
     // Register
     // ----------------------------------------------------------------
@@ -48,6 +51,10 @@ public class AuthService {
         user.setPhone(request.phone());
 
         userRepository.save(user);
+
+        eventPublisher.publishEvent(
+                new UserRegisteredEvent(user.getId())
+        );
 
         log.info("User registered: {}", user.getEmail());
         return buildAuthResult(user.getId(), user.getEmail());

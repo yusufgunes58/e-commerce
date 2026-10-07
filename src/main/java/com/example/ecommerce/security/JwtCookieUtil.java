@@ -6,6 +6,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -23,12 +24,13 @@ import java.util.Optional;
  */
 @Component
 @RequiredArgsConstructor
+@ConfigurationProperties(prefix = "app.security.cookie")
 public class JwtCookieUtil {
 
-    private static final String ACCESS_TOKEN_COOKIE = "access_token";
-    private static final String REFRESH_TOKEN_COOKIE = "refresh_token";
-    private static final String ACCESS_TOKEN_PATH = "/api";
-    private static final String REFRESH_TOKEN_PATH = "/api/v1/auth/refresh";
+    private String accessTokenName;
+    private String refreshTokenName;
+    private String accessTokenPath;
+    private String refreshTokenPath;
 
     private final JwtProperties jwtProperties;
 
@@ -40,35 +42,37 @@ public class JwtCookieUtil {
     }
 
     public void clearAuthCookies(HttpServletResponse response) {
-        clearCookie(response, ACCESS_TOKEN_COOKIE, ACCESS_TOKEN_PATH);
-        clearCookie(response, REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_PATH);
+        clearCookie(response, accessTokenName, accessTokenPath);
+        clearCookie(response, refreshTokenName, refreshTokenPath);
     }
 
     public Optional<String> extractAccessToken(HttpServletRequest request) {
-        return extractCookie(request, ACCESS_TOKEN_COOKIE);
+        return extractCookie(request, accessTokenName);
     }
 
     public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        return extractCookie(request, REFRESH_TOKEN_COOKIE);
+        return extractCookie(request, refreshTokenName);
     }
 
+    // helpers
+
     private void addAccessCookie(HttpServletResponse response, String token) {
-        ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
+        ResponseCookie cookie = ResponseCookie.from(accessTokenName, token)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path(ACCESS_TOKEN_PATH)
+                .path(accessTokenPath)
                 .maxAge(jwtProperties.getAccessTokenExpiration())
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
     private void addRefreshCookie(HttpServletResponse response, String token) {
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
+        ResponseCookie cookie = ResponseCookie.from(refreshTokenName, token)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path(REFRESH_TOKEN_PATH)
+                .path(refreshTokenPath)
                 .maxAge(jwtProperties.getRefreshTokenExpiration())
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
