@@ -1,5 +1,7 @@
 package com.example.ecommerce.cart.service;
 
+import com.example.ecommerce.cart.dto.internal.CartSnapshot;
+import com.example.ecommerce.cart.dto.internal.CartSnapshotItem;
 import com.example.ecommerce.cart.dto.request.AddCartItemRequest;
 import com.example.ecommerce.cart.dto.request.UpdateCartItemRequest;
 import com.example.ecommerce.cart.dto.response.CartItemResponse;
@@ -28,7 +30,7 @@ public class GuestCartService {
 
     private final GuestCartRepository guestCartRepository;
     private final ProductVariantService productVariantService;
-    private final CartValidator cartValidator;
+    private final CartValidatorHelper cartValidator;
 
     public CartResponse addItem(String sessionId,
                         AddCartItemRequest request
@@ -183,6 +185,33 @@ public class GuestCartService {
         );
 
         return getCart(sessionId);
+    }
+
+    public CartSnapshot getCartSnapshot(String sessionId) {
+
+        if (sessionId == null) {
+            log.debug("Guest cart snapshot requested without session");
+            return new CartSnapshot(List.of());
+        }
+
+        Map<Long, Integer> cartItems =
+                guestCartRepository.find(sessionId);
+
+        List<CartSnapshotItem> items =
+                cartItems.entrySet()
+                        .stream()
+                        .map(entry -> new CartSnapshotItem(
+                                entry.getKey(),
+                                entry.getValue()
+                        ))
+                        .toList();
+
+        log.debug(
+                "Guest cart snapshot retrieved: itemCount={}",
+                items.size()
+        );
+
+        return new CartSnapshot(items);
     }
 
 }

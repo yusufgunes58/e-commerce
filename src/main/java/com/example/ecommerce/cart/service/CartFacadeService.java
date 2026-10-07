@@ -1,5 +1,6 @@
 package com.example.ecommerce.cart.service;
 
+import com.example.ecommerce.cart.dto.internal.CartSnapshot;
 import com.example.ecommerce.cart.dto.request.AddCartItemRequest;
 import com.example.ecommerce.cart.dto.request.UpdateCartItemRequest;
 import com.example.ecommerce.cart.dto.response.CartResponse;
@@ -55,5 +56,17 @@ public class CartFacadeService {
         }
        return guestCartService.deleteItem(sessionId, productVariantId
         );
+    }
+
+    // for order service
+    public CartSnapshot getCartSnapshot(
+            Long userId,
+            String sessionId
+    ) {
+        if (userId != null) {
+            return cartService.getCartSnapshot(userId);
+        }
+
+        return guestCartService.getCartSnapshot(sessionId);
     }
 }

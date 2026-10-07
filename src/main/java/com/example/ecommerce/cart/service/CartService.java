@@ -1,5 +1,7 @@
 package com.example.ecommerce.cart.service;
 
+import com.example.ecommerce.cart.dto.internal.CartSnapshot;
+import com.example.ecommerce.cart.dto.internal.CartSnapshotItem;
 import com.example.ecommerce.cart.dto.request.AddCartItemRequest;
 import com.example.ecommerce.cart.dto.request.UpdateCartItemRequest;
 import com.example.ecommerce.cart.dto.response.CartItemResponse;
@@ -37,7 +39,7 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductVariantService productVariantService;
-    private final CartValidator cartValidator;
+    private final CartValidatorHelper cartValidator;
 
     @Transactional
     public Cart createCart(Long userId) {
@@ -101,7 +103,7 @@ public class CartService {
                 })
                 .toList();
 
-        BigDecimal totalPrice = getTotalPrice(items);
+        BigDecimal totalPrice = cartValidator.getTotalPrice(items);
 
         log.debug("Fetched cart. userId={}, itemCount={}",
                 userId,
@@ -141,7 +143,7 @@ public class CartService {
                 )
                 .orElse(null);
 
-        int newQuantity = calculateNewQuantity(
+        int newQuantity = cartValidator.calculateNewQuantity(
                 cartItem,
                 request.quantity()
         );
@@ -244,24 +246,29 @@ public class CartService {
     }
 
 
-    // HELPERS
+    public CartSnapshot getCartSnapshot(Long userId) {
 
-    private BigDecimal getTotalPrice(
-            List<CartItemResponse> items
-    ) {
-        return items.stream()
-                .map(CartItemResponse::totalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.CART_NOT_FOUND)
+                );
 
-    private int calculateNewQuantity(
-            CartItem cartItem,
-            int requestedQuantity
-    ) {
-        if (cartItem == null) {
-            return requestedQuantity;
-        }
-        return cartItem.getQuantity() + requestedQuantity;
+        List<CartSnapshotItem> items =
+                cartItemRepository.findCartItemSummaries(cart.getId())
+                        .stream()
+                        .map(item -> new CartSnapshotItem(
+                                item.getProductVariantId(),
+                                item.getQuantity()
+                        ))
+                        .toList();
+
+        log.debug(
+                "Cart snapshot retrieved: userId={}, itemCount={}",
+                userId,
+                items.size()
+        );
+
+        return new CartSnapshot(items);
     }
 
 }
