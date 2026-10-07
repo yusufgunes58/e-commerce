@@ -47,7 +47,6 @@ public class OrderItem {
     private Integer quantity;
 
     public OrderItem(
-            Order order,
             Long productVariantId,
             String productName,
             String sku,
@@ -57,7 +56,6 @@ public class OrderItem {
             BigDecimal unitPrice,
             Integer quantity
     ) {
-        this.order = order;
         this.productVariantId = productVariantId;
         this.productName = productName;
         this.sku = sku;
